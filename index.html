@@ -101,7 +101,6 @@ display:none;
 z-index:999;
 }
 
-/* allow buttons to be clicked even when scanner paused */
 #reader video{
 pointer-events:none;
 }
@@ -116,8 +115,6 @@ pointer-events:none;
 
 <div class="container">
 
-<!-- LOGIN -->
-
 <div class="card" id="login">
 
 <h2>Staff Login</h2>
@@ -128,9 +125,6 @@ pointer-events:none;
 <button class="login" onclick="login()">Login</button>
 
 </div>
-
-
-<!-- SCANNER -->
 
 <div class="card" id="portal" style="display:none">
 
@@ -149,9 +143,6 @@ pointer-events:none;
 <button class="in" onclick="mark('IN')">IN</button>
 
 </div>
-
-
-<!-- DASHBOARD -->
 
 <div class="card" id="dashboard" style="display:none">
 
@@ -176,8 +167,6 @@ pointer-events:none;
 
 <script>
 
-/* staff accounts */
-
 const USERS={
 "Babbage":"hack24",
 "Codd":"hack24",
@@ -186,8 +175,6 @@ const USERS={
 "Lee":"hack24"
 }
 
-/* API */
-
 const API="https://script.google.com/macros/s/AKfycbx_GQ2HpAXnXQi4Ro9yCR7RVK6KqxQDQI6VifmiKFprwChe1ka3VaC5gL5TJLV7eEgC/exec"
 
 let html5QrCode
@@ -195,7 +182,6 @@ let scannedID=""
 let scannedName=""
 let scannedTeam=""
 let lastScan=0
-
 
 function login(){
 
@@ -221,7 +207,6 @@ notify("Invalid login")
 
 }
 
-
 function startScanner(){
 
 html5QrCode=new Html5Qrcode("reader")
@@ -233,7 +218,6 @@ onScan
 )
 
 }
-
 
 function onScan(text){
 
@@ -258,7 +242,6 @@ notify("Choose IN or OUT")
 
 }
 
-
 function mark(action){
 
 if(scannedID===""){
@@ -268,7 +251,9 @@ return
 
 fetch(API,{
 method:"POST",
-headers:{"Content-Type":"application/json"},
+headers:{
+"Content-Type":"application/json"
+},
 body:JSON.stringify({
 id:scannedID,
 name:scannedName,
@@ -276,10 +261,16 @@ team:scannedTeam,
 action:action
 })
 })
-.then(r=>r.text())
-.then(d=>{
+.then(res=>res.text())
+.then(data=>{
 
+console.log("API:",data)
+
+if(data.includes("Logged")){
 notify(scannedName+" marked "+action)
+}else{
+notify("Server error: "+data)
+}
 
 setTimeout(()=>{
 html5QrCode.resume()
@@ -292,9 +283,12 @@ document.getElementById("team").innerText=""
 updateDashboard()
 
 })
+.catch(err=>{
+console.error(err)
+notify("Network error contacting server")
+})
 
 }
-
 
 function updateDashboard(){
 
@@ -305,12 +299,10 @@ fetch(API)
 let table=""
 
 data.forEach(p=>{
-
 table+=`<tr>
 <td>${p.name}</td>
 <td>${p.team}</td>
 </tr>`
-
 })
 
 document.getElementById("outList").innerHTML=table
@@ -318,7 +310,6 @@ document.getElementById("outList").innerHTML=table
 })
 
 }
-
 
 function notify(msg){
 
@@ -336,5 +327,4 @@ n.style.display="none"
 </script>
 
 </body>
-
 </html>
