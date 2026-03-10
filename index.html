@@ -1,11 +1,9 @@
-```html
 <!DOCTYPE html>
 <html>
 
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>Hackathon Break Portal</title>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
@@ -38,9 +36,29 @@ text-align:center;
 box-shadow:0 10px 25px rgba(0,0,0,0.2);
 }
 
-h2{
-margin-top:0;
+h2{margin-top:0}
+
+input{
+width:90%;
+padding:10px;
+margin:10px;
+border-radius:6px;
+border:1px solid #ccc;
+font-size:16px;
 }
+
+button{
+padding:12px 18px;
+margin:8px;
+border:none;
+border-radius:6px;
+font-size:16px;
+cursor:pointer;
+}
+
+.login{background:#2a5298;color:white;}
+.out{background:#e74c3c;color:white;}
+.in{background:#2ecc71;color:white;}
 
 #reader{
 width:100%;
@@ -53,18 +71,6 @@ background:#f4f4f4;
 padding:10px;
 border-radius:6px;
 }
-
-button{
-padding:12px 18px;
-margin:8px;
-border:none;
-border-radius:6px;
-font-size:16px;
-cursor:pointer;
-}
-
-.out{background:#e74c3c;color:white;}
-.in{background:#2ecc71;color:white;}
 
 table{
 width:100%;
@@ -95,7 +101,7 @@ display:none;
 z-index:999;
 }
 
-/* FIX: prevent scanner overlay blocking buttons */
+/* allow buttons to be clicked even when scanner paused */
 #reader video{
 pointer-events:none;
 }
@@ -110,7 +116,23 @@ pointer-events:none;
 
 <div class="container">
 
-<div class="card">
+<!-- LOGIN -->
+
+<div class="card" id="login">
+
+<h2>Staff Login</h2>
+
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
+
+<button class="login" onclick="login()">Login</button>
+
+</div>
+
+
+<!-- SCANNER -->
+
+<div class="card" id="portal" style="display:none">
 
 <h2>Scan Participant</h2>
 
@@ -128,7 +150,10 @@ pointer-events:none;
 
 </div>
 
-<div class="card">
+
+<!-- DASHBOARD -->
+
+<div class="card" id="dashboard" style="display:none">
 
 <h2>Participants Outside</h2>
 
@@ -151,15 +176,51 @@ pointer-events:none;
 
 <script>
 
+/* staff accounts */
+
+const USERS={
+"Babbage":"hack24",
+"Codd":"hack24",
+"Panini":"hack24",
+"Turing":"hack24",
+"Lee":"hack24"
+}
+
+/* API */
+
 const API="https://script.google.com/macros/s/AKfycbyrtZSOx4pMWuWVsb2xFLusmgfxS_OSJszhJZJKIS7ChGGBc5ChrofVWVeczCd1p160gw/exec"
 
 let html5QrCode
-
 let scannedID=""
 let scannedName=""
 let scannedTeam=""
-
 let lastScan=0
+
+
+function login(){
+
+let u=document.getElementById("username").value
+let p=document.getElementById("password").value
+
+if(USERS[u] && USERS[u]==p){
+
+document.getElementById("login").style.display="none"
+document.getElementById("portal").style.display="block"
+document.getElementById("dashboard").style.display="block"
+
+startScanner()
+updateDashboard()
+
+setInterval(updateDashboard,5000)
+
+}else{
+
+notify("Invalid login")
+
+}
+
+}
+
 
 function startScanner(){
 
@@ -172,6 +233,7 @@ onScan
 )
 
 }
+
 
 function onScan(text){
 
@@ -195,6 +257,7 @@ html5QrCode.pause()
 notify("Choose IN or OUT")
 
 }
+
 
 function mark(action){
 
@@ -232,6 +295,7 @@ updateDashboard()
 
 }
 
+
 function updateDashboard(){
 
 fetch(API)
@@ -241,10 +305,12 @@ fetch(API)
 let table=""
 
 data.forEach(p=>{
+
 table+=`<tr>
 <td>${p.name}</td>
 <td>${p.team}</td>
 </tr>`
+
 })
 
 document.getElementById("outList").innerHTML=table
@@ -252,6 +318,7 @@ document.getElementById("outList").innerHTML=table
 })
 
 }
+
 
 function notify(msg){
 
@@ -266,13 +333,8 @@ n.style.display="none"
 
 }
 
-startScanner()
-
-setInterval(updateDashboard,5000)
-
 </script>
 
 </body>
 
 </html>
-```
