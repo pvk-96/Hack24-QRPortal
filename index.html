@@ -42,28 +42,6 @@ h2{
 margin-top:0;
 }
 
-input{
-width:90%;
-padding:10px;
-margin:10px;
-border-radius:6px;
-border:1px solid #ccc;
-font-size:16px;
-}
-
-button{
-padding:12px 18px;
-margin:8px;
-border:none;
-border-radius:6px;
-font-size:16px;
-cursor:pointer;
-}
-
-.login{background:#2a5298;color:white;}
-.out{background:#e74c3c;color:white;}
-.in{background:#2ecc71;color:white;}
-
 #reader{
 width:100%;
 margin-top:15px;
@@ -76,19 +54,17 @@ padding:10px;
 border-radius:6px;
 }
 
-#notify{
-position:fixed;
-top:20px;
-left:50%;
-transform:translateX(-50%);
-background:#2ecc71;
-color:white;
-padding:12px 20px;
+button{
+padding:12px 18px;
+margin:8px;
+border:none;
 border-radius:6px;
-font-weight:bold;
-display:none;
-z-index:999;
+font-size:16px;
+cursor:pointer;
 }
+
+.out{background:#e74c3c;color:white;}
+.in{background:#2ecc71;color:white;}
 
 table{
 width:100%;
@@ -105,6 +81,25 @@ background:#2a5298;
 color:white;
 }
 
+#notify{
+position:fixed;
+top:20px;
+left:50%;
+transform:translateX(-50%);
+background:#2ecc71;
+color:white;
+padding:12px 20px;
+border-radius:6px;
+font-weight:bold;
+display:none;
+z-index:999;
+}
+
+/* FIX: prevent scanner overlay blocking buttons */
+#reader video{
+pointer-events:none;
+}
+
 </style>
 
 </head>
@@ -115,23 +110,7 @@ color:white;
 
 <div class="container">
 
-<!-- LOGIN -->
-
-<div class="card" id="login">
-
-<h2>Staff Login</h2>
-
-<input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
-
-<button class="login" onclick="login()">Login</button>
-
-</div>
-
-
-<!-- SCANNER -->
-
-<div class="card" id="portal" style="display:none">
+<div class="card">
 
 <h2>Scan Participant</h2>
 
@@ -149,10 +128,7 @@ color:white;
 
 </div>
 
-
-<!-- DASHBOARD -->
-
-<div class="card" id="dashboard" style="display:none">
+<div class="card">
 
 <h2>Participants Outside</h2>
 
@@ -165,9 +141,7 @@ color:white;
 </tr>
 </thead>
 
-<tbody id="outList">
-
-</tbody>
+<tbody id="outList"></tbody>
 
 </table>
 
@@ -177,15 +151,7 @@ color:white;
 
 <script>
 
-const USERS={
-"Babbage":"hack24",
-"Codd":"hack24",
-"Panini":"hack24",
-"Turing":"hack24",
-"Lee":"hack24"
-}
-
-const API="https://script.google.com/macros/s/AKfycbxeb8W9sBW7Rt-YWBj_yVnbnTSafNt4mLoaPDIYyucjxDYYCvNGApIa5zQFlAopqduY/exec"
+const API="https://script.google.com/macros/s/AKfycbyrtZSOx4pMWuWVsb2xFLusmgfxS_OSJszhJZJKIS7ChGGBc5ChrofVWVeczCd1p160gw/exec"
 
 let html5QrCode
 
@@ -194,30 +160,6 @@ let scannedName=""
 let scannedTeam=""
 
 let lastScan=0
-
-function login(){
-
-let u=document.getElementById("username").value
-let p=document.getElementById("password").value
-
-if(USERS[u] && USERS[u]==p){
-
-document.getElementById("login").style.display="none"
-document.getElementById("portal").style.display="block"
-document.getElementById("dashboard").style.display="block"
-
-startScanner()
-updateDashboard()
-
-setInterval(updateDashboard,5000)
-
-}else{
-
-notify("Invalid login")
-
-}
-
-}
 
 function startScanner(){
 
@@ -256,6 +198,11 @@ notify("Choose IN or OUT")
 
 function mark(action){
 
+if(scannedID===""){
+notify("Scan QR first")
+return
+}
+
 fetch(API,{
 method:"POST",
 headers:{"Content-Type":"application/json"},
@@ -271,7 +218,9 @@ action:action
 
 notify(scannedName+" marked "+action)
 
+setTimeout(()=>{
 html5QrCode.resume()
+},800)
 
 scannedID=""
 document.getElementById("name").innerText="Waiting for scan..."
@@ -292,12 +241,10 @@ fetch(API)
 let table=""
 
 data.forEach(p=>{
-
 table+=`<tr>
 <td>${p.name}</td>
 <td>${p.team}</td>
 </tr>`
-
 })
 
 document.getElementById("outList").innerHTML=table
@@ -318,6 +265,10 @@ n.style.display="none"
 },3000)
 
 }
+
+startScanner()
+
+setInterval(updateDashboard,5000)
 
 </script>
 
